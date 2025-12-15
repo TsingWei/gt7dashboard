@@ -11,4 +11,4 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 python3 -m pip install -r requirements.txt
 python3 helper/download_cars_csv.py
-python3 -m bokeh serve .
+python3 flask_app.py

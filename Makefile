@@ -25,7 +25,7 @@ car_lists:
 	python3 helper/download_cars_csv.py
 
 serve:
-	bokeh serve .
+	python3 flask_app.py
 
 deploy:
 	git push
