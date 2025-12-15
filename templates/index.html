@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GT7 Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div id="connection-status" class="status-indicator status-disconnected" title="Disconnected">🔴</div>
+                <div class="dashboard-title">
+                    <a href="https://github.com/snipem/gt7dashboard" target="_blank">GT7 Dashboard</a>
+                </div>
+            </div>
+            <div class="header-center">
+                <div id="lap-info" class="lap-info">
+                    <p><b>Last Lap: </b><span id="last-lap-title">-</span></p>
+                    <p><b>Reference Lap: </b><span id="reference-lap-title">-</span></p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="reset-btn" class="btn btn-danger">Reset Laps</button>
+                <button id="save-btn" class="btn btn-primary">Save Laps</button>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="get-faster">Get Faster</button>
+            <button class="tab-button" data-tab="race-lines">Race Lines</button>
+            <button class="tab-button" data-tab="race">Race</button>
+        </nav>
+
+        <!-- Tab Content: Get Faster -->
+        <div id="get-faster" class="tab-content active">
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="control-group">
+                    <label for="lap-files-select">Load Laps:</label>
+                    <select id="lap-files-select" class="form-select">
+                        <option value="">Select a file...</option>
+                        {% for lap_file in lap_files %}
+                        <option value="{{ lap_file }}">{{ lap_file }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="reference-lap-select">Reference Lap:</label>
+                    <select id="reference-lap-select" class="form-select">
+                        <option value="-1">Best Lap</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button id="log-lap-btn" class="btn btn-secondary">Log Lap Now</button>
+                </div>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="always-record-checkbox">
+                        Record Replays
+                    </label>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <!-- Time Diff Chart -->
+                <div class="chart-container">
+                    <h3>Time Diff - Last vs Reference</h3>
+                    <canvas id="time-diff-chart"></canvas>
+                </div>
+
+                <!-- Speed Chart -->
+                <div class="chart-container">
+                    <h3>Speed - Last, Reference, Median</h3>
+                    <canvas id="speed-chart"></canvas>
+                </div>
+
+                <!-- Race Line Chart -->
+                <div class="chart-container chart-small">
+                    <h3>Race Line</h3>
+                    <canvas id="race-line-chart"></canvas>
+                </div>
+
+                <!-- Speed Variance Chart -->
+                <div class="chart-container">
+                    <h3>Speed Deviation</h3>
+                    <canvas id="speed-variance-chart"></canvas>
+                </div>
+
+                <!-- Throttle Chart -->
+                <div class="chart-container">
+                    <h3>Throttle</h3>
+                    <canvas id="throttle-chart"></canvas>
+                </div>
+
+                <!-- Yaw Rate Chart -->
+                <div class="chart-container">
+                    <h3>Yaw Rate / Second</h3>
+                    <canvas id="yaw-rate-chart"></canvas>
+                </div>
+
+                <!-- Braking Chart -->
+                <div class="chart-container">
+                    <h3>Braking</h3>
+                    <canvas id="braking-chart"></canvas>
+                </div>
+
+                <!-- Coasting Chart -->
+                <div class="chart-container">
+                    <h3>Coasting</h3>
+                    <canvas id="coasting-chart"></canvas>
+                </div>
+
+                <!-- Gear Chart -->
+                <div class="chart-container">
+                    <h3>Gear</h3>
+                    <canvas id="gear-chart"></canvas>
+                </div>
+
+                <!-- RPM Chart -->
+                <div class="chart-container">
+                    <h3>RPM</h3>
+                    <canvas id="rpm-chart"></canvas>
+                </div>
+
+                <!-- Boost Chart -->
+                <div class="chart-container">
+                    <h3>Boost (x100 kPa)</h3>
+                    <canvas id="boost-chart"></canvas>
+                </div>
+
+                <!-- Tire Speed Chart -->
+                <div class="chart-container">
+                    <h3>Tire Speed / Car Speed</h3>
+                    <canvas id="tire-speed-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Info Panels -->
+            <div class="info-panels">
+                <div class="info-panel">
+                    <h4>Tuning Info</h4>
+                    <div id="tuning-info">
+                        <p>Max Speed: <b><span id="max-speed">-</span></b> kph</p>
+                        <p>Min Body Height: <b><span id="min-body-height">-</span></b> mm</p>
+                    </div>
+                </div>
+                <div class="info-panel">
+                    <h4>Fuel Map</h4>
+                    <div id="fuel-map"></div>
+                </div>
+                <div class="info-panel">
+                    <h4>Speed Peaks and Valleys</h4>
+                    <div id="speed-peaks-valleys"></div>
+                </div>
+            </div>
+
+            <!-- Laps Table -->
+            <div class="table-section">
+                <h3>Lap Times</h3>
+                <table id="laps-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Car</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="laps-table-body">
+                        <tr>
+                            <td colspan="4">No laps recorded yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: Race Lines -->
+        <div id="race-lines" class="tab-content">
+            <div class="chart-container">
+                <h3>Race Line - Detailed View</h3>
+                <canvas id="race-line-detailed-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tab Content: Race -->
+        <div id="race" class="tab-content">
+            <div class="controls-section">
+                <button id="reset-btn-race" class="btn btn-danger">Reset Laps</button>
+                <button id="save-btn-race" class="btn btn-primary">Save Laps</button>
+            </div>
+            <div class="info-panels">
+                <div class="info-panel">
+                    <h4>Fuel Map</h4>
+                    <div id="fuel-map-race"></div>
+                </div>
+                <div class="info-panel">
+                    <h4>Speed Peaks and Valleys</h4>
+                    <div id="speed-peaks-valleys-race"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

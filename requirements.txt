@@ -1,5 +1,8 @@
-bokeh~=3.6.3
+Flask~=3.0.0
+Flask-SocketIO~=5.3.6
 pycryptodome~=3.21.0
 tabulate~=0.8.10
 pandas~=2.2.3
 scipy~=1.15.1
+python-socketio~=5.11.0
+eventlet~=0.36.1
