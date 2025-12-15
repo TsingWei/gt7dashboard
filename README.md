@@ -2,6 +2,8 @@
 
 gt7dashboard is a live dashboard for Gran Turismo 7. Based on the recent discovery of the telemetry interface of GT7 described [here first](https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728 ). This began as a fork of Bornhalls [gt7telemetry](https://github.com/Bornhall/gt7telemetry).
 
+**Note:** The UI has been re-implemented using Flask (previously Bokeh). The new Flask-based interface provides a modern web dashboard with real-time updates via WebSockets and interactive charts using Chart.js.
+
 See the [Manual](#manual) for detailed instructions.
 
 ## Features
@@ -56,11 +58,11 @@ The commands `pip3` or `python3` may be different on your OS. Try `pip` or `pyth
 
 2. (Optional, Once) Download the list of car names with `python3 helper/download_cars_csv.py`. Without this file, car names will only show as `CAR-ID-123`.
 3. Running the Dashboard
-    - (Mac/Linux) `bokeh serve .` (when inside the  `gt7dashboard` folder)
-    - (Windows) `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
+    - `python3 flask_app.py` (when inside the  `gt7dashboard` folder)
+    - The dashboard will be available at `http://localhost:5006`
 4. (Optional) Running the Dashboard with a custom IP
-   - (Mac/Linux) `GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS> bokeh serve .` (when inside the  `gt7dashboard` folder)
-   - (Windows) `set GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS>` and `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
+   - (Mac/Linux) `GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS> python3 flask_app.py` (when inside the  `gt7dashboard` folder)
+   - (Windows) `set GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS>` and `python flask_app.py`  (when inside the `gt7dashboard` folder)
 
 ## Troubleshooting
 
@@ -83,7 +85,6 @@ docker run -d --restart unless-stopped \
   -p 5006:5006/tcp \
   -p 33740:33740/udp \
   -v /home/user/gt7data/:/usr/src/app/data \
-  -e BOKEH_ALLOW_WS_ORIGIN=domain_of_server:5006 \
   -e GT7_PLAYSTATION_IP=<playstation ip> \
   -e TZ=Europe/Berlin \
   gt7dashboard
@@ -104,7 +105,6 @@ This is a sample `docker-compose` configuration:
         volumes:
             - /home/user/gt7data/:/usr/src/app/data
         environment:
-            - BOKEH_ALLOW_WS_ORIGIN=domain_of_server:5006
             - GT7_PLAYSTATION_IP=<playstation ip>
             - TZ=Europe/Berlin
 ```
