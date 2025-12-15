@@ -6,7 +6,8 @@ from typing import List
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 
-from gt7dashboard import gt7communication, gt7diagrams, gt7help, gt7helper, gt7lap
+from gt7dashboard import gt7communication, gt7helper, gt7lap
+from gt7dashboard import gt7diagrams_flask
 from gt7dashboard.gt7helper import (
     load_laps_from_pickle,
     save_laps_to_pickle,
@@ -153,7 +154,7 @@ def get_fuel_map():
         return jsonify({'fuel_map': ''})
     
     last_lap = gt7comm.laps[0]
-    fuel_map_html = gt7diagrams.get_fuel_map_html_table(last_lap)
+    fuel_map_html = gt7diagrams_flask.get_fuel_map_html_table(last_lap)
     
     return jsonify({'fuel_map': fuel_map_html})
 
