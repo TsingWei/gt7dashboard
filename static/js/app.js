@@ -5,7 +5,12 @@ let updateInterval;
 
 // Initialize Socket.IO connection
 function initSocket() {
-    socket = io();
+    socket = io({
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5
+    });
 
     socket.on('connect', () => {
         console.log('Connected to server');
@@ -13,6 +18,12 @@ function initSocket() {
 
     socket.on('disconnect', () => {
         console.log('Disconnected from server');
+        updateConnectionStatus(false);
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+        updateConnectionStatus(false);
     });
 
     socket.on('connection_update', (data) => {
@@ -262,6 +273,9 @@ async function updateDashboard() {
     try {
         // Fetch lap data
         const response = await fetch('/api/lap_data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
 
         // Update lap info header
@@ -280,11 +294,17 @@ async function updateDashboard() {
 
         // Update tuning info
         const tuningResponse = await fetch('/api/tuning_info');
+        if (!tuningResponse.ok) {
+            throw new Error(`HTTP error! status: ${tuningResponse.status}`);
+        }
         const tuningData = await tuningResponse.json();
         updateTuningInfo(tuningData);
 
         // Update fuel map
         const fuelResponse = await fetch('/api/fuel_map');
+        if (!fuelResponse.ok) {
+            throw new Error(`HTTP error! status: ${fuelResponse.status}`);
+        }
         const fuelData = await fuelResponse.json();
         document.getElementById('fuel-map').innerHTML = fuelData.fuel_map || 'No fuel data available';
         document.getElementById('fuel-map-race').innerHTML = fuelData.fuel_map || 'No fuel data available';
